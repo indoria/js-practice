@@ -267,9 +267,17 @@ const UIController = (function() {
     function bindNoteEvents() {
         elements.addNoteBtn.addEventListener('click', function() {
             const currentNotebookId = NoteBook.getCurrentNotebook();
-            if (!currentNotebookId) return;
+            if (!currentNotebookId) {
+                Modal.alert('Error', 'No Notebook selected');
+                return;
+            }
             
             const note = NoteBook.createNote(currentNotebookId, 'Untitled Note', '');
+            if (!note) {
+                Modal.alert('Error', 'No Notebook selected');
+                return;
+            }
+
             NoteBook.setCurrentNote(note.id);
             renderNotes();
             renderEditor();
@@ -278,18 +286,26 @@ const UIController = (function() {
         elements.deleteNoteBtn.addEventListener('click', function() {
             const currentNotebookId = NoteBook.getCurrentNotebook();
             const currentNoteId = NoteBook.getCurrentNote();
-            
-            if (currentNotebookId && currentNoteId) {
-                Modal.confirm(
-                    'Delete Note',
-                    'Are you sure you want to delete this note? This action cannot be undone.',
-                    () => {
-                        NoteBook.deleteNote(currentNotebookId, currentNoteId);
-                        renderNotes();
-                        renderEditor();
-                    }
-                );
+
+            if (!currentNotebookId) {
+                Modal.alert('Error', 'No Notebook selected');
+                return;
             }
+
+            if (!currentNoteId) {
+                Modal.alert('Error', 'No note selected for deleting');
+                return;
+            }
+            
+            Modal.confirm(
+                'Delete Note',
+                'Are you sure you want to delete this note? This action cannot be undone.',
+                () => {
+                    NoteBook.deleteNote(currentNotebookId, currentNoteId);
+                    renderNotes();
+                    renderEditor();
+                }
+            );
         });
     }
 
@@ -470,6 +486,9 @@ const UIController = (function() {
             
             const nameSpan = div.querySelector('.tree-item-name');
             const iconSpan = div.querySelector('.tree-item-icon');
+
+            // Show full item name on hover when text is truncated
+            nameSpan.setAttribute('title', item.name || '');
             
             // Click on name to select
             nameSpan.addEventListener('click', function(e) {
@@ -635,6 +654,11 @@ const UIController = (function() {
                 <div class="note-title">${note.title}</div>
                 <div class="note-preview">${contentPreview}</div>
             `;
+
+            const noteTitleElement = div.querySelector('.note-title');
+            if (noteTitleElement) {
+                noteTitleElement.setAttribute('title', note.title || '');
+            }
             
             div.addEventListener('click', function() {
                 NoteBook.setCurrentNote(note.id);
